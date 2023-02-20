@@ -5,34 +5,38 @@ Universal Type in Rust
 
 ```rust
 fn main() {
-    let Iso {
-        inj: int_inj,
-        prj: int_prj,
-    } = <RefUniversalType as UniversalType>::embed::<usize>();
-    let Iso {
-        inj: _,
-        prj: float_prj,
-    } = <RefUniversalType as UniversalType>::embed::<f32>();
-    let Iso {
-        inj: bool_inj,
-        prj: bool_prj,
-    } = <RefUniversalType as UniversalType>::embed::<bool>();
-    let mut r = (int_inj)(5);
-    let opt1 = (float_prj)(&mut r);
-    let opt2 = (int_prj)(&mut r);
-    let mut r = (bool_inj)(true);
-    let opt3 = (bool_prj)(&mut r);
-    let opt4 = (int_prj)(&mut r);
+    let mut r = (USIZE_ISO.lock().unwrap().inj)(5);
+    let opt1 = (F32_ISO.lock().unwrap().prj)(&mut r);
+    let opt2 = (USIZE_ISO.lock().unwrap().prj)(&mut r);
+    let mut r = (BOOL_ISO.lock().unwrap().inj)(true);
+    let opt3 = (BOOL_ISO.lock().unwrap().prj)(&mut r);
+    let opt4 = (USIZE_ISO.lock().unwrap().prj)(&mut r);
 
     println!(
         "opt1: {:?}, opt2: {:?}, opt3: {:?}, opt4: {:?}",
         opt1, opt2, opt3, opt4
     );
+
+    println!("{}", show(&mut r));
+}
+
+fn show(t: &mut <RefUniversalType as UniversalType>::T) -> String {
+    match (
+        (USIZE_ISO.lock().unwrap().prj)(t),
+        (F32_ISO.lock().unwrap().prj)(t),
+        (BOOL_ISO.lock().unwrap().prj)(t),
+    ) {
+        (Some(int), _, _) => format!("int: {}", int),
+        (_, Some(float), _) => format!("float: {}", float),
+        (_, _, Some(boolean)) => format!("bool: {}", boolean),
+        _ => "Unknown type!".to_string(),
+    }
 }
 ```
 
 ```
 opt1: None, opt2: Some(5), opt3: Some(true), opt4: None
+bool: true
 ```
 
 ## References
