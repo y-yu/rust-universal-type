@@ -31,5 +31,8 @@ jobs:
         run: |
           cargo fmt --all -- --check
 
+      - name: Test
+        run: cargo test
+
       - name: Run main
         run: cargo run
