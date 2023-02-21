@@ -15,25 +15,20 @@ impl UniversalType for RefUniversalType {
 
     fn embed<A: 'static + Copy + Send>() -> Iso<A, Self::T> {
         let rc0: Arc<Mutex<Option<A>>> = Arc::new(Mutex::new(None));
-        //let rc1 = Rc::clone(&rc0);
-        let rc2 = Arc::clone(&rc0);
+        let rc_prj = Arc::clone(&rc0);
 
         Iso::<A, Self::T>::new(
             Box::new(move |a: A| -> RefStore {
-                let rc1 = Arc::clone(&rc0);
-                let rc3 = Arc::clone(&rc0);
+                let rc_clear = Arc::clone(&rc0);
+                let rc_store = Arc::clone(&rc0);
                 RefStore {
                     clear: Box::new(move || {
-                        let mut d = rc3.lock().unwrap();
+                        let mut d = rc_clear.lock().unwrap();
                         *d = None;
-                        // rc3.lock().unwrap().replace(None);
-                        ()
                     }),
                     store: Box::new(move || {
-                        let mut d = rc1.lock().unwrap();
+                        let mut d = rc_store.lock().unwrap();
                         *d = Some(a);
-                        //rc1.replace(Some(a));
-                        ()
                     }),
                 }
             }),
@@ -41,7 +36,7 @@ impl UniversalType for RefUniversalType {
                 let RefStore { store, clear } = t;
 
                 (store)();
-                let d = rc2.lock().unwrap();
+                let d = rc_prj.lock().unwrap();
                 let result = *d;
                 std::mem::drop(d);
                 (clear)();
